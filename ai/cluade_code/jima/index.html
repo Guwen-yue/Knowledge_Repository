@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="吉马程序员 - AI时代的一人公司(OPC)开发模式。全栈开发 + AI赋能，用一个人的效率完成一个团队的工作。">
+<title>吉马程序员 - AI驱动的全栈开发</title>
+<style>
+/* ====== RESET & BASE ====== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:80px}
+body{font-family:'PingFang SC','Microsoft YaHei','Noto Sans SC',-apple-system,sans-serif;background:var(--bg-deep);color:var(--text-primary);line-height:1.6;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+ul{list-style:none}
+img{max-width:100%;display:block}
+
+/* ====== DESIGN TOKENS ====== */
+:root{
+  --bg-deep:#080b12;
+  --bg-primary:#0d1117;
+  --bg-card:#161b26;
+  --bg-card-hover:#1c2333;
+  --accent-cyan:#00e5ff;
+  --accent-purple:#a855f7;
+  --accent-green:#00ff41;
+  --accent-gold:#f59e0b;
+  --text-primary:#e6edf3;
+  --text-secondary:#8b949e;
+  --text-dim:#484f58;
+  --border-subtle:#21262d;
+  --glow-cyan:0 0 20px rgba(0,229,255,0.4);
+  --glow-purple:0 0 20px rgba(168,85,247,0.4);
+  --glow-green:0 0 16px rgba(0,255,65,0.3);
+  --radius-sm:8px;
+  --radius-md:12px;
+  --radius-lg:20px;
+  --radius-xl:28px;
+}
+
+/* ====== UTILITY CLASSES ====== */
+.container{max-width:1200px;margin:0 auto;padding:0 24px}
+.section-padding{padding:100px 0}
+.section-label{display:inline-block;font-size:13px;font-weight:500;color:var(--accent-cyan);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;border:1px solid rgba(0,229,255,0.3);padding:4px 12px;border-radius:20px}
+.section-title{font-size:clamp(28px,4vw,44px);font-weight:700;line-height:1.25;margin-bottom:16px;color:var(--text-primary)}
+.section-subtitle{font-size:16px;color:var(--text-secondary);max-width:600px;line-height:1.7}
+.gradient-text{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.glow-border{border:1px solid var(--border-subtle);transition:border-color .3s,box-shadow .3s}
+.glow-border:hover{border-color:var(--accent-cyan);box-shadow:var(--glow-cyan)}
+
+/* ====== SKIP LINK ====== */
+.skip-link{position:absolute;top:-100%;left:16px;background:var(--accent-cyan);color:var(--bg-deep);padding:8px 16px;border-radius:var(--radius-sm);font-weight:600;z-index:1000;transition:top .2s}
+.skip-link:focus{top:8px}
+
+/* ====== NAVBAR ====== */
+.navbar{position:fixed;top:0;left:0;right:0;z-index:999;padding:16px 0;transition:background .3s,backdrop-filter .3s,box-shadow .3s}
+.navbar.scrolled{background:rgba(13,17,23,.85);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 1px 0 var(--border-subtle)}
+.navbar .container{display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:8px;font-size:20px;font-weight:700;letter-spacing:0.02em}
+.nav-logo .bracket{color:var(--accent-cyan);font-family:'Fira Code','Cascadia Code',Consolas,monospace;font-size:22px}
+.nav-logo .slash{color:var(--accent-purple);font-family:'Fira Code','Cascadia Code',Consolas,monospace}
+.nav-links{display:flex;align-items:center;gap:32px}
+.nav-links a{font-size:14px;color:var(--text-secondary);transition:color .25s;position:relative}
+.nav-links a:hover,.nav-links a.active{color:var(--text-primary)}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:2px;background:var(--accent-cyan);transition:width .3s;border-radius:1px}
+.nav-links a:hover::after,.nav-links a.active::after{width:100%}
+.nav-cta-btn{font-size:13px;font-weight:600;padding:8px 18px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:var(--bg-deep);transition:opacity .25s,transform .25s}
+.nav-cta-btn:hover{opacity:.9;transform:translateY(-1px)}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;z-index:1000;background:none;border:none;padding:4px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--text-primary);border-radius:2px;transition:transform .3s,opacity .3s}
+.hamburger.open span:nth-child(1){transform:rotate(45deg) translateY(-3px)}
+.hamburger.open span:nth-child(2){opacity:0}
+.hamburger.open span:nth-child(3){transform:rotate(-45deg) translateY(3px)}
+
+/* ====== HERO ====== */
+.hero{position:relative;min-height:100vh;display:flex;align-items:center;overflow:hidden;padding-top:80px}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at var(--mouse-x,50%) var(--mouse-y,50%),rgba(0,229,255,.06) 0%,transparent 60%);pointer-events:none;z-index:0}
+.hero .container{position:relative;z-index:1;text-align:center;max-width:800px}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border:1px solid rgba(0,229,255,.25);border-radius:20px;font-size:13px;color:var(--accent-cyan);margin-bottom:28px;background:rgba(0,229,255,.05)}
+.hero-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--accent-green);animation:dot-pulse 2s infinite}
+.hero h1{font-size:clamp(36px,5.5vw,60px);font-weight:800;line-height:1.2;margin-bottom:20px;letter-spacing:-0.01em}
+.hero h1 .highlight{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero .typed-wrapper{font-size:18px;color:var(--text-secondary);min-height:28px;margin-bottom:24px;display:flex;align-items:center;justify-content:center;gap:2px}
+.hero .typed-text{color:var(--accent-cyan);font-family:'Fira Code','Cascadia Code',Consolas,monospace}
+.hero .typed-cursor{display:inline-block;width:2px;height:20px;background:var(--accent-cyan);animation:cursor-blink .8s infinite}
+.hero-desc{font-size:15px;color:var(--text-dim);max-width:520px;margin:0 auto 36px;line-height:1.8}
+.hero-btns{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;font-size:15px;font-weight:600;padding:14px 32px;border-radius:var(--radius-md);cursor:pointer;transition:transform .25s,box-shadow .25s,opacity .25s;border:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:var(--bg-deep);box-shadow:0 4px 24px rgba(168,85,247,.3)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(168,85,247,.45)}
+.btn-outline{background:transparent;color:var(--text-primary);border:1px solid var(--border-subtle)}
+.btn-outline:hover{border-color:var(--accent-cyan);box-shadow:var(--glow-cyan);transform:translateY(-2px)}
+
+/* Code Rain */
+.code-rain{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.code-rain span{position:absolute;font-family:'Fira Code','Cascadia Code',Consolas,monospace;font-size:13px;color:var(--accent-green);opacity:.12;animation:code-fall linear infinite;white-space:pre}
+
+/* Hero decorative grid lines */
+.hero-grid{position:absolute;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(0,229,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.03) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at center,black 30%,transparent 70%)}
+
+/* ====== STATS ====== */
+.stats{background:var(--bg-primary);border-top:1px solid var(--border-subtle);border-bottom:1px solid var(--border-subtle)}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;text-align:center}
+.stat-item{position:relative}
+.stat-number{font-size:clamp(32px,4vw,48px);font-weight:800;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.stat-suffix{font-size:clamp(20px,3vw,32px);font-weight:700;color:var(--accent-cyan)}
+.stat-label{font-size:14px;color:var(--text-secondary);margin-top:6px}
+.stat-divider{position:absolute;right:0;top:20%;height:60%;width:1px;background:var(--border-subtle)}
+
+/* ====== SERVICES ====== */
+.services{background:var(--bg-deep)}
+.services .section-header{text-align:center;margin-bottom:60px}
+.services-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.service-card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:36px 28px;transition:transform .35s,box-shadow .35s,border-color .35s,background .35s;position:relative;overflow:hidden}
+.service-card::before{content:'';position:absolute;inset:0;border-radius:var(--radius-lg);opacity:0;transition:opacity .35s;background:radial-gradient(ellipse at top left,rgba(0,229,255,.06),transparent 70%)}
+.service-card:hover{transform:translateY(-6px);border-color:var(--accent-cyan);box-shadow:0 0 40px rgba(0,229,255,.12);background:var(--bg-card-hover)}
+.service-card:hover::before{opacity:1}
+.service-icon{width:52px;height:52px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px;position:relative;z-index:1}
+.service-icon.web{background:rgba(0,229,255,.12);color:var(--accent-cyan)}
+.service-icon.ai{background:rgba(168,85,247,.12);color:var(--accent-purple)}
+.service-icon.mobile{background:rgba(245,158,11,.12);color:var(--accent-gold)}
+.service-icon.wechat{background:rgba(0,255,65,.12);color:var(--accent-green)}
+.service-icon.desktop{background:rgba(99,102,241,.12);color:#6366f1}
+.service-icon.consult{background:rgba(236,72,153,.12);color:#ec4899}
+.service-card h3{font-size:17px;font-weight:700;margin-bottom:10px;position:relative;z-index:1}
+.service-card p{font-size:14px;color:var(--text-secondary);line-height:1.7;position:relative;z-index:1}
+.service-card .card-glow{position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent-cyan),transparent);opacity:0;transition:opacity .35s}
+.service-card:hover .card-glow{opacity:1}
+
+/* ====== HOW IT WORKS ====== */
+.how-it-works{background:var(--bg-primary)}
+.how-it-works .section-header{text-align:center;margin-bottom:60px}
+.process-timeline{display:flex;align-items:flex-start;justify-content:space-between;position:relative;max-width:900px;margin:0 auto}
+.process-timeline::before{content:'';position:absolute;top:36px;left:0;right:0;height:2px;background:var(--border-subtle);z-index:0}
+.process-timeline::after{content:'';position:absolute;top:36px;left:0;height:2px;background:linear-gradient(90deg,var(--accent-cyan),var(--accent-purple));z-index:1;width:var(--line-progress,0%);transition:width .6s ease-out}
+.process-step{position:relative;z-index:2;text-align:center;flex:1;padding:0 16px}
+.step-number{width:72px;height:72px;border-radius:50%;border:2px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;margin:0 auto 20px;background:var(--bg-card);transition:border-color .4s,box-shadow .4s,color .4s;color:var(--text-secondary);font-family:'Fira Code','Cascadia Code',Consolas,monospace}
+.process-step.visible .step-number{border-color:var(--accent-cyan);box-shadow:var(--glow-cyan);color:var(--accent-cyan)}
+.process-step h4{font-size:16px;font-weight:700;margin-bottom:8px}
+.process-step p{font-size:13px;color:var(--text-secondary);line-height:1.6;max-width:180px;margin:0 auto}
+
+/* ====== TECH STACK ====== */
+.tech-stack{background:var(--bg-deep)}
+.tech-stack .section-header{text-align:center;margin-bottom:48px}
+.tech-cloud{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;max-width:800px;margin:0 auto}
+.tech-tag{padding:10px 20px;border:1px solid var(--border-subtle);border-radius:24px;font-size:14px;color:var(--text-secondary);transition:border-color .3s,box-shadow .3s,color .3s,transform .3s;cursor:default;font-family:'Fira Code','Cascadia Code',Consolas,monospace;animation:tag-float 6s ease-in-out infinite}
+.tech-tag:nth-child(odd){animation-delay:-3s}
+.tech-tag:nth-child(3n){animation-duration:8s}
+.tech-tag:nth-child(5n+1){animation-duration:7s}
+.tech-tag:hover{border-color:var(--accent-cyan);box-shadow:var(--glow-cyan);color:var(--accent-cyan);transform:translateY(-3px)}
+
+/* ====== COMPARISON ====== */
+.comparison{background:var(--bg-primary)}
+.comparison .section-header{text-align:center;margin-bottom:60px}
+.compare-table{max-width:800px;margin:0 auto;border-radius:var(--radius-lg);overflow:hidden;border:1px solid var(--border-subtle)}
+.compare-row{display:grid;grid-template-columns:1fr 60px 1fr;align-items:center;padding:20px 32px;border-bottom:1px solid var(--border-subtle);transition:background .3s}
+.compare-row:last-child{border-bottom:none}
+.compare-row.header{background:var(--bg-card);font-weight:700;font-size:15px;padding:24px 32px}
+.compare-row.header .old-way{color:#f87171}
+.compare-row.header .new-way{color:var(--accent-cyan)}
+.compare-row .vs{text-align:center;font-size:12px;font-weight:700;color:var(--text-dim)}
+.compare-row .label{font-weight:600;font-size:14px}
+.compare-row .old-way{color:#f87171;font-size:14px}
+.compare-row .new-way{color:var(--accent-green);font-size:14px;font-weight:500}
+.compare-row.cost .bar-wrapper{display:flex;align-items:center;gap:12px}
+.compare-row.cost .old-bar{flex:1;height:8px;background:rgba(248,113,113,.3);border-radius:4px}
+.compare-row.cost .new-bar{flex:.35;height:8px;background:var(--accent-green);border-radius:4px}
+
+/* ====== CTA ====== */
+.cta-section{background:var(--bg-deep);position:relative;overflow:hidden}
+.cta-section::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(168,85,247,.08),transparent 60%)}
+.cta-inner{position:relative;z-index:1;max-width:700px;margin:0 auto;text-align:center;padding:80px 40px;border-radius:var(--radius-xl);background:var(--bg-card);border:1px solid var(--border-subtle);position:relative;overflow:hidden}
+.cta-inner::after{content:'';position:absolute;inset:-1px;border-radius:var(--radius-xl);background:linear-gradient(135deg,rgba(0,229,255,.15),rgba(168,85,247,.15));z-index:0;pointer-events:none}
+.cta-inner>*{position:relative;z-index:1}
+.cta-inner h2{font-size:clamp(26px,3.5vw,38px);font-weight:800;margin-bottom:14px;line-height:1.3}
+.cta-inner .cta-sub{font-size:15px;color:var(--text-secondary);margin-bottom:32px;line-height:1.7}
+.cta-contact{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:28px}
+.cta-contact-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary);padding:8px 16px;border:1px solid var(--border-subtle);border-radius:var(--radius-md);font-family:'Fira Code','Cascadia Code',Consolas,monospace}
+.cta-contact-item .contact-icon{font-size:16px}
+.btn-cta{font-size:16px;font-weight:700;padding:16px 48px;border-radius:var(--radius-md);background:linear-gradient(135deg,var(--accent-purple),var(--accent-cyan));color:var(--bg-deep);border:none;cursor:pointer;transition:transform .25s,box-shadow .25s;box-shadow:0 4px 28px rgba(168,85,247,.35)}
+.btn-cta:hover{transform:translateY(-3px);box-shadow:0 8px 40px rgba(168,85,247,.5)}
+
+/* ====== FOOTER ====== */
+.footer{background:var(--bg-primary);border-top:1px solid var(--border-subtle);padding:60px 0 32px}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:48px;margin-bottom:40px}
+.footer-brand .footer-logo{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:700;margin-bottom:12px}
+.footer-brand p{font-size:13px;color:var(--text-dim);line-height:1.7;max-width:280px}
+.footer-col h4{font-size:14px;font-weight:600;margin-bottom:16px;color:var(--text-primary)}
+.footer-col li{margin-bottom:10px}
+.footer-col a{font-size:13px;color:var(--text-secondary);transition:color .25s}
+.footer-col a:hover{color:var(--accent-cyan)}
+.footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:24px;border-top:1px solid var(--border-subtle);flex-wrap:wrap;gap:12px}
+.footer-bottom span{font-size:12px;color:var(--text-dim)}
+.footer-bottom .made-with{font-size:12px;color:var(--text-dim);display:flex;align-items:center;gap:4px}
+.footer-bottom .heart{color:#ec4899}
+
+/* ====== ANIMATION KEYFRAMES ====== */
+@keyframes dot-pulse{0%,100%{opacity:1;box-shadow:0 0 8px var(--accent-green)}50%{opacity:.3;box-shadow:none}}
+@keyframes cursor-blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes code-fall{0%{transform:translateY(-100px);opacity:.15}80%{opacity:.08}100%{transform:translateY(100vh+100px);opacity:.02}}
+@keyframes tag-float{0%,100%{transform:translateY(0)}25%{transform:translateY(-4px)}75%{transform:translateY(3px)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+
+/* Reveal animation classes */
+.reveal{opacity:0}
+.reveal.fade-up.visible{animation:fadeInUp .7s ease-out forwards}
+.reveal.fade-in.visible{animation:fadeIn .8s ease-out forwards}
+.reveal.scale-in.visible{animation:scaleIn .6s ease-out forwards}
+.reveal.slide-left.visible{animation:fadeInLeft .6s ease-out forwards}
+.reveal.slide-right.visible{animation:fadeInRight .6s ease-out forwards}
+@keyframes fadeInLeft{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeInRight{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* ====== RESPONSIVE ====== */
+@media(max-width:1024px){
+  .services-grid{grid-template-columns:repeat(2,1fr)}
+  .process-timeline{flex-wrap:wrap;gap:32px}
+  .process-timeline::before,.process-timeline::after{display:none}
+  .process-step{flex:0 0 45%}
+}
+@media(max-width:768px){
+  .nav-links{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,17,23,.95);backdrop-filter:blur(20px);flex-direction:column;align-items:center;justify-content:center;gap:36px;z-index:998}
+  .nav-links.open{display:flex}
+  .hamburger{display:flex}
+  .stats-grid{grid-template-columns:repeat(2,1fr);gap:24px}
+  .stat-divider:nth-child(2){display:none}
+  .stat-divider:nth-child(4){display:none}
+  .services-grid{grid-template-columns:1fr}
+  .process-timeline{flex-direction:column;align-items:center;gap:28px}
+  .process-step{max-width:280px}
+  .compare-row{grid-template-columns:1fr 40px 1fr;padding:16px 20px}
+  .compare-row.header{font-size:13px;padding:18px 20px}
+  .footer-grid{grid-template-columns:1fr;gap:32px}
+  .section-padding{padding:64px 0}
+  .hero{min-height:90vh}
+}
+@media(max-width:480px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:28px}
+  .hero-btns{flex-direction:column;align-items:center}
+  .btn{width:100%;justify-content:center}
+  .cta-inner{padding:48px 24px}
+}
+
+/* ====== SCROLLBAR ====== */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:var(--bg-deep)}
+::-webkit-scrollbar-thumb{background:var(--border-subtle);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-dim)}
+
+/* Reduced motion */
+@media(prefers-reduced-motion:reduce){
+  .code-rain span{animation:none;display:none}
+  .reveal{opacity:1!important;transform:none!important;animation:none!important}
+  .tech-tag{animation:none}
+}
+</style>
+</head>
+<body>
+
+<a href="#main-content" class="skip-link">跳转到主要内容</a>
+
+<!-- ====== NAVBAR ====== -->
+<nav class="navbar" id="navbar" role="navigation" aria-label="主导航">
+  <div class="container">
+    <a href="#" class="nav-logo" aria-label="吉马程序员首页">
+      <span class="bracket">&lt;/</span>
+      <span>吉马程序员</span>
+      <span class="slash">/&gt;</span>
+    </a>
+    <button class="hamburger" id="hamburger" aria-label="菜单" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="nav-links" id="nav-links" role="menubar">
+      <li role="none"><a href="#hero" role="menuitem">首页</a></li>
+      <li role="none"><a href="#services" role="menuitem">服务</a></li>
+      <li role="none"><a href="#how-it-works" role="menuitem">流程</a></li>
+      <li role="none"><a href="#tech-stack" role="menuitem">技术栈</a></li>
+      <li role="none"><a href="#cta" role="menuitem" class="nav-cta-btn">联系我</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="main-content">
+
+<!-- ====== HERO ====== -->
+<section class="hero" id="hero" aria-labelledby="hero-heading">
+  <div class="hero-grid"></div>
+  <div class="code-rain" id="code-rain" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero-badge reveal fade-up">
+      <span class="dot"></span>
+      AI全栈开发 · 一人公司模式
+    </div>
+    <h1 id="hero-heading" class="reveal fade-up">
+      一个人，也能打造<br><span class="highlight">一支技术团队</span>的作品
+    </h1>
+    <div class="typed-wrapper reveal fade-up" aria-live="polite">
+      <span class="typed-text" id="typed-text"></span>
+      <span class="typed-cursor" aria-hidden="true"></span>
+    </div>
+    <p class="hero-desc reveal fade-up">
+      吉马程序员 — AI时代的<span style="color:var(--accent-cyan)">OPC一人公司</span>开发模式。<br>
+      全栈开发 + AI赋能，用一个人的效率完成一个团队的工作。
+    </p>
+    <div class="hero-btns reveal fade-up">
+      <a href="#cta" class="btn btn-primary">获取免费咨询</a>
+      <a href="#services" class="btn btn-outline">查看服务 →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ====== STATS ====== -->
+<section class="stats section-padding" id="stats" aria-label="数据统计">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal scale-in">
+        <div class="stat-number"><span data-count="50">0</span>+</div>
+        <div class="stat-label">已完成项目</div>
+        <div class="stat-divider"></div>
+      </div>
+      <div class="stat-item reveal scale-in">
+        <div class="stat-number"><span data-count="6">0</span>+</div>
+        <div class="stat-label">年开发经验</div>
+        <div class="stat-divider"></div>
+      </div>
+      <div class="stat-item reveal scale-in">
+        <div class="stat-number"><span data-count="30">0</span>+</div>
+        <div class="stat-label">技术栈掌握</div>
+        <div class="stat-divider"></div>
+      </div>
+      <div class="stat-item reveal scale-in">
+        <div class="stat-number"><span data-count="98">0</span>%</div>
+        <div class="stat-label">客户满意度</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== SERVICES ====== -->
+<section class="services section-padding" id="services" aria-labelledby="services-heading">
+  <div class="container">
+    <div class="section-header reveal fade-up">
+      <span class="section-label">服务项目</span>
+      <h2 class="section-title" id="services-heading">一个人，覆盖<span class="gradient-text">全栈全平台</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">从Web到移动端，从AI集成到桌面应用，一站式技术交付</p>
+    </div>
+    <div class="services-grid">
+      <div class="service-card reveal scale-in">
+        <div class="service-icon web">&#x1f310;</div>
+        <h3>全栈Web开发</h3>
+        <p>React / Vue / Next.js 前端，Node.js / Python 后端，从界面到数据库一站式交付。</p>
+        <div class="card-glow"></div>
+      </div>
+      <div class="service-card reveal scale-in">
+        <div class="service-icon ai">&#x1f916;</div>
+        <h3>AI应用集成</h3>
+        <p>LLM对话机器人、智能客服、RAG知识库、AI Agent开发，让AI真正为业务创造价值。</p>
+        <div class="card-glow"></div>
+      </div>
+      <div class="service-card reveal scale-in">
+        <div class="service-icon mobile">&#x1f4f1;</div>
+        <h3>移动端应用</h3>
+        <p>Flutter跨平台开发，一套代码覆盖iOS和Android，快速迭代上线。</p>
+        <div class="card-glow"></div>
+      </div>
+      <div class="service-card reveal scale-in">
+        <div class="service-icon wechat">&#x1f4ac;</div>
+        <h3>微信生态开发</h3>
+        <p>微信小程序、公众号H5、企业微信集成，覆盖中国用户的全场景触达。</p>
+        <div class="card-glow"></div>
+      </div>
+      <div class="service-card reveal scale-in">
+        <div class="service-icon desktop">&#x1f5a5;</div>
+        <h3>桌面应用</h3>
+        <p>Electron跨平台桌面应用，Windows/macOS/Linux一次开发全平台覆盖。</p>
+        <div class="card-glow"></div>
+      </div>
+      <div class="service-card reveal scale-in">
+        <div class="service-icon consult">&#x1f3af;</div>
+        <h3>技术咨询</h3>
+        <p>技术选型、架构设计、代码审查，帮助非技术团队做出正确的技术决策。</p>
+        <div class="card-glow"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== HOW IT WORKS ====== -->
+<section class="how-it-works section-padding" id="how-it-works" aria-labelledby="process-heading">
+  <div class="container">
+    <div class="section-header reveal fade-up">
+      <span class="section-label">合作流程</span>
+      <h2 class="section-title" id="process-heading">从想法到上线，<span class="gradient-text">只需四步</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">透明高效的协作模式，随时随地掌握项目进展</p>
+    </div>
+    <div class="process-timeline" id="process-timeline">
+      <div class="process-step reveal fade-up">
+        <div class="step-number">01</div>
+        <h4>需求沟通</h4>
+        <p>了解业务目标和痛点，梳理核心功能需求，明确项目边界</p>
+      </div>
+      <div class="process-step reveal fade-up">
+        <div class="step-number">02</div>
+        <h4>方案设计</h4>
+        <p>输出技术方案、产品原型和项目排期，确保方向一致</p>
+      </div>
+      <div class="process-step reveal fade-up">
+        <div class="step-number">03</div>
+        <h4>迭代开发</h4>
+        <p>AI辅助高效开发，每周同步进度，持续交付可见成果</p>
+      </div>
+      <div class="process-step reveal fade-up">
+        <div class="step-number">04</div>
+        <h4>上线运维</h4>
+        <p>部署上线、功能验收、后续维护支持，确保稳定运行</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== TECH STACK ====== -->
+<section class="tech-stack section-padding" id="tech-stack" aria-labelledby="tech-heading">
+  <div class="container">
+    <div class="section-header reveal fade-up">
+      <span class="section-label">技术栈</span>
+      <h2 class="section-title" id="tech-heading">用最合适的工具，<span class="gradient-text">解决你的问题</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">持续学习最新技术，为每个项目选择最优方案</p>
+    </div>
+    <div class="tech-cloud reveal fade-in">
+      <span class="tech-tag">React</span>
+      <span class="tech-tag">Vue</span>
+      <span class="tech-tag">Next.js</span>
+      <span class="tech-tag">TypeScript</span>
+      <span class="tech-tag">Tailwind CSS</span>
+      <span class="tech-tag">Flutter</span>
+      <span class="tech-tag">Electron</span>
+      <span class="tech-tag">Node.js</span>
+      <span class="tech-tag">Python</span>
+      <span class="tech-tag">FastAPI</span>
+      <span class="tech-tag">PostgreSQL</span>
+      <span class="tech-tag">MongoDB</span>
+      <span class="tech-tag">Redis</span>
+      <span class="tech-tag">Docker</span>
+      <span class="tech-tag">AWS</span>
+      <span class="tech-tag">OpenAI API</span>
+      <span class="tech-tag">LangChain</span>
+      <span class="tech-tag">RAG</span>
+      <span class="tech-tag">微信小程序</span>
+      <span class="tech-tag">GraphQL</span>
+    </div>
+  </div>
+</section>
+
+<!-- ====== COMPARISON ====== -->
+<section class="comparison section-padding" id="comparison" aria-labelledby="compare-heading">
+  <div class="container">
+    <div class="section-header reveal fade-up">
+      <span class="section-label">为什么选择OPC</span>
+      <h2 class="section-title" id="compare-heading"><span class="gradient-text">传统外包</span> vs <span class="gradient-text">一人+AI</span></h2>
+      <p class="section-subtitle" style="margin:0 auto">同样的交付质量，更高的效率，更低的成本</p>
+    </div>
+    <div class="compare-table reveal scale-in">
+      <div class="compare-row header">
+        <span class="old-way">传统外包团队</span>
+        <span class="vs">VS</span>
+        <span class="new-way">一人+AI模式</span>
+      </div>
+      <div class="compare-row">
+        <span class="old-way">多层沟通，信息衰减</span>
+        <span class="vs"></span>
+        <span class="new-way">直接沟通，零损耗</span>
+      </div>
+      <div class="compare-row">
+        <span class="old-way">排期等待，响应缓慢</span>
+        <span class="vs"></span>
+        <span class="new-way">AI赋能，快速响应</span>
+      </div>
+      <div class="compare-row">
+        <span class="old-way">人数多，价格高昂</span>
+        <span class="vs"></span>
+        <span class="new-way">一人成本，降低60%+</span>
+      </div>
+      <div class="compare-row">
+        <span class="old-way">人员质量参差不齐</span>
+        <span class="vs"></span>
+        <span class="new-way">全栈可控，质量保证</span>
+      </div>
+      <div class="compare-row cost">
+        <div class="bar-wrapper"><span class="old-way">成本对比</span><div class="old-bar"></div></div>
+        <span class="vs"></span>
+        <div class="bar-wrapper"><span class="new-way">节省60%+</span><div class="new-bar"></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== CTA ====== -->
+<section class="cta-section section-padding" id="cta" aria-labelledby="cta-heading">
+  <div class="container">
+    <div class="cta-inner reveal scale-in">
+      <h2 id="cta-heading">准备好把你的想法<br>变成<span class="gradient-text">产品</span>了吗？</h2>
+      <p class="cta-sub">现在联系我，免费获取30分钟技术咨询和项目评估</p>
+      <div class="cta-contact">
+        <div class="cta-contact-item">
+          <span class="contact-icon">&#x1f4e7;</span>
+          <span>jima@example.com</span>
+        </div>
+        <div class="cta-contact-item">
+          <span class="contact-icon">&#x1f4f1;</span>
+          <span>WeChat: jima_dev</span>
+        </div>
+      </div>
+      <a href="mailto:jima@example.com" class="btn-cta">立即联系 →</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ====== FOOTER ====== -->
+<footer class="footer" role="contentinfo">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="footer-logo">
+          <span style="color:var(--accent-cyan);font-family:'Fira Code','Cascadia Code',Consolas,monospace">&lt;/</span>
+          <span>吉马程序员</span>
+          <span style="color:var(--accent-purple);font-family:'Fira Code','Cascadia Code',Consolas,monospace">/&gt;</span>
+        </div>
+        <p>AI时代的一人公司 — 效率更高、成本更低、质量更好。用技术让好想法落地。</p>
+      </div>
+      <div class="footer-col">
+        <h4>快速导航</h4>
+        <ul>
+          <li><a href="#services">服务项目</a></li>
+          <li><a href="#how-it-works">合作流程</a></li>
+          <li><a href="#tech-stack">技术栈</a></li>
+          <li><a href="#cta">联系我</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>联系方式</h4>
+        <ul>
+          <li><a href="mailto:jima@example.com">Email</a></li>
+          <li><a href="#">微信公众号</a></li>
+          <li><a href="#">GitHub</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 吉马程序员. All rights reserved.</span>
+      <span class="made-with">Made with <span class="heart">&#x2665;</span> + AI</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+document.addEventListener('DOMContentLoaded',()=>{
+
+  // ====== CODE RAIN ======
+  const codeRain = document.getElementById('code-rain');
+  const chars = '{ } [ ] ( ) = > < / ; : . , * & ^ % $ # @ ! + - 0 1';
+  const charArr = chars.split(' ');
+  for(let i=0;i<40;i++){
+    const span=document.createElement('span');
+    const len=Math.floor(Math.random()*15)+4;
+    let str='';
+    for(let j=0;j<len;j++) str+=charArr[Math.floor(Math.random()*charArr.length)];
+    span.textContent=str;
+    span.style.left=Math.random()*100+'%';
+    span.style.top=-(Math.random()*100)+'%';
+    span.style.animationDuration=(Math.random()*8+6)+'s';
+    span.style.animationDelay=-(Math.random()*10)+'s';
+    span.style.fontSize=(Math.random()*4+11)+'px';
+    codeRain.appendChild(span);
+  }
+
+  // ====== MOUSE GLOW ======
+  const hero=document.querySelector('.hero');
+  hero.addEventListener('mousemove',e=>{
+    const rect=hero.getBoundingClientRect();
+    const x=((e.clientX-rect.left)/rect.width)*100;
+    const y=((e.clientY-rect.top)/rect.height)*100;
+    hero.style.setProperty('--mouse-x',x+'%');
+    hero.style.setProperty('--mouse-y',y+'%');
+  });
+
+  // ====== TYPED TEXT ======
+  const typedEl=document.getElementById('typed-text');
+  const phrases=['AI驱动的全栈开发','从想法到上线，一站式交付','降本增效，专注价值创造','一个人 = 一个团队'];
+  let phraseIdx=0,charIdx=0,isDeleting=false;
+  function typeLoop(){
+    const current=phrases[phraseIdx];
+    if(isDeleting){
+      charIdx--;
+      typedEl.textContent=current.substring(0,charIdx);
+      if(charIdx===0){isDeleting=false;phraseIdx=(phraseIdx+1)%phrases.length;setTimeout(typeLoop,400);return}
+      setTimeout(typeLoop,40);
+    }else{
+      charIdx++;
+      typedEl.textContent=current.substring(0,charIdx);
+      if(charIdx===current.length){setTimeout(()=>{isDeleting=true;typeLoop()},1800);return}
+      setTimeout(typeLoop,80);
+    }
+  }
+  typeLoop();
+
+  // ====== NAVBAR SCROLL EFFECT ======
+  const navbar=document.getElementById('navbar');
+  window.addEventListener('scroll',()=>{
+    navbar.classList.toggle('scrolled',window.scrollY>80);
+  });
+
+  // ====== MOBILE MENU ======
+  const hamburger=document.getElementById('hamburger');
+  const navLinks=document.getElementById('nav-links');
+  hamburger.addEventListener('click',()=>{
+    hamburger.classList.toggle('open');
+    navLinks.classList.toggle('open');
+    hamburger.setAttribute('aria-expanded',navLinks.classList.contains('open'));
+    document.body.style.overflow=navLinks.classList.contains('open')?'hidden':'';
+  });
+  navLinks.querySelectorAll('a').forEach(a=>{
+    a.addEventListener('click',()=>{
+      hamburger.classList.remove('open');
+      navLinks.classList.remove('open');
+      hamburger.setAttribute('aria-expanded','false');
+      document.body.style.overflow='';
+    });
+  });
+
+  // ====== SMOOTH SCROLL OFFSET ======
+  document.querySelectorAll('a[href^="#"]').forEach(link=>{
+    link.addEventListener('click',function(e){
+      const target=document.querySelector(this.getAttribute('href'));
+      if(target){
+        e.preventDefault();
+        const offset=navbar.offsetHeight+16;
+        const top=target.getBoundingClientRect().top+window.scrollY-offset;
+        window.scrollTo({top,behavior:'smooth'});
+      }
+    });
+  });
+
+  // ====== INTERSECTION OBSERVER - REVEAL ======
+  const revealEls=document.querySelectorAll('.reveal');
+  const revealObserver=new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        entry.target.classList.add('visible');
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  },{threshold:0.15,rootMargin:'0px 0px -80px 0px'});
+  revealEls.forEach(el=>revealObserver.observe(el));
+
+  // ====== COUNTER ANIMATION ======
+  const statSection=document.getElementById('stats');
+  let countersRun=false;
+  const counterObserver=new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting&&!countersRun){
+      countersRun=true;
+      document.querySelectorAll('[data-count]').forEach(el=>{
+        const target=parseInt(el.getAttribute('data-count'));
+        const duration=2000;
+        const start=performance.now();
+        function update(now){
+          const elapsed=now-start;
+          const progress=Math.min(elapsed/duration,1);
+          const eased=1-Math.pow(1-progress,3);
+          el.textContent=Math.round(eased*target);
+          if(progress<1)requestAnimationFrame(update);
+        }
+        requestAnimationFrame(update);
+      });
+      counterObserver.unobserve(statSection);
+    }
+  },{threshold:0.3});
+  counterObserver.observe(statSection);
+
+  // ====== PROCESS TIMELINE PROGRESS ======
+  const timeline=document.getElementById('process-timeline');
+  const steps=timeline.querySelectorAll('.process-step');
+  const timelineObserver=new IntersectionObserver((entries)=>{
+    if(entries[0].isIntersecting){
+      const visibleSteps=timeline.querySelectorAll('.process-step.visible').length;
+      const progress=(visibleSteps/steps.length)*100;
+      timeline.style.setProperty('--line-progress',progress+'%');
+    }
+  },{threshold:0.3});
+  timelineObserver.observe(timeline);
+
+  // ====== ACTIVE NAV LINK ======
+  const sections=document.querySelectorAll('section[id]');
+  const navObs=new IntersectionObserver((entries)=>{
+    entries.forEach(entry=>{
+      if(entry.isIntersecting){
+        const id=entry.target.id;
+        navLinks.querySelectorAll('a').forEach(a=>{
+          a.classList.toggle('active',a.getAttribute('href')==='#'+id);
+        });
+      }
+    });
+  },{threshold:0.3,rootMargin:'-50% 0px -40% 0px'});
+  sections.forEach(s=>navObs.observe(s));
+
+});
+</script>
+
+</body>
+</html>

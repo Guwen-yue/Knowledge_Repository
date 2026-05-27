@@ -1,0 +1,8 @@
+{
+  "name": "生日贺卡助手 (Birthday Card Assistant)",
+  "description": "An AI-powered personalized birthday card generator with vibrant designs.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

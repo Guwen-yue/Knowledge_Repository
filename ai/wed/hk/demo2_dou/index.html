@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>趣味生日卡片生成器</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Microsoft YaHei", sans-serif;
+      }
+
+      body {
+        min-height: 100vh;
+        background: linear-gradient(
+          135deg,
+          #667eea 0%,
+          #764ba2 50%,
+          #f093fb 100%
+        );
+        background-image: linear-gradient(
+            135deg,
+            #667eea 0%,
+            #764ba2 50%,
+            #f093fb 100%
+          ),
+          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.3)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="40" cy="80" r="2.5" fill="rgba(255,255,255,0.25)"/><circle cx="70" cy="70" r="1" fill="rgba(255,255,255,0.3)"/><circle cx="10" cy="60" r="1.5" fill="rgba(255,255,255,0.2)"/><circle cx="90" cy="10" r="2" fill="rgba(255,255,255,0.25)"/></svg>');
+        background-blend-mode: overlay;
+        padding: 40px 20px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:%23FFD700;stop-opacity:1"/><stop offset="100%" style="stop-color:%23FFA500;stop-opacity:1"/></linearGradient></defs><path d="M50,200 Q100,150 150,200 T250,200 T350,200" stroke="rgba(255,215,0,0.15)" stroke-width="3" fill="none"/><circle cx="30" cy="30" r="15" fill="rgba(255,215,0,0.1)"/><circle cx="370" cy="80" r="20" fill="rgba(255,105,180,0.1)"/><circle cx="380" cy="350" r="12" fill="rgba(255,215,0,0.1)"/></svg>');
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .page-header {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .page-title {
+        font-size: 48px;
+        font-weight: bold;
+        color: #fff;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3),
+          0 0 60px rgba(255, 107, 157, 0.5);
+        margin-bottom: 10px;
+        animation: titlePulse 3s ease-in-out infinite;
+      }
+
+      .page-title .emoji {
+        display: inline-block;
+        animation: bounce 1s ease-in-out infinite;
+      }
+
+      .page-title .emoji:nth-child(1) {
+        animation-delay: 0s;
+      }
+      .page-title .emoji:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+      .page-title .emoji:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes titlePulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.02);
+        }
+      }
+
+      .page-subtitle {
+        font-size: 18px;
+        color: rgba(255, 255, 255, 0.9);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      .page-subtitle .highlight {
+        background: linear-gradient(135deg, #ffd700, #ff6b9d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: bold;
+      }
+
+      .main-container {
+        display: flex;
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+      }
+
+      .left-panel {
+        flex: 1;
+        max-width: 480px;
+      }
+
+      .right-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        align-items: center;
+      }
+
+      .container {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 35px;
+        border-radius: 24px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+      }
+
+      h1 {
+        text-align: center;
+        background: linear-gradient(135deg, #ff6b9d, #c44569, #ff6b9d);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 30px;
+        font-size: 26px;
+        text-shadow: 0 2px 10px rgba(255, 107, 157, 0.2);
+      }
+
+      .form-item {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        color: #555;
+        font-weight: 600;
+        font-size: 15px;
+      }
+
+      input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 2px solid #f0e6ef;
+        border-radius: 12px;
+        font-size: 16px;
+        transition: 0.3s;
+        background: #fafafa;
+      }
+
+      input:focus {
+        outline: none;
+        border-color: #ff6b9d;
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
+      }
+
+      .btn-box {
+        display: flex;
+        gap: 15px;
+        margin-top: 15px;
+      }
+
+      button {
+        flex: 1;
+        padding: 14px;
+        border: none;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+
+      .generate-btn {
+        background: linear-gradient(135deg, #ff6b9d, #c44569);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(255, 107, 157, 0.4);
+      }
+
+      .copy-btn {
+        background: linear-gradient(135deg, #74b9ff, #0984e3);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(116, 185, 255, 0.4);
+      }
+
+      button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+      }
+
+      .result-box {
+        margin-top: 25px;
+        padding: 20px;
+        background: linear-gradient(135deg, #fff5f8, #fff0f5);
+        border: 2px dashed #ffb6c1;
+        border-radius: 16px;
+        line-height: 1.9;
+        color: #333;
+        font-size: 15px;
+        min-height: 100px;
+      }
+
+      .tip {
+        text-align: center;
+        margin-top: 15px;
+        color: #999;
+        font-size: 14px;
+      }
+
+      .card-preview {
+        width: 100%;
+        max-width: 420px;
+        min-height: 500px;
+        background: linear-gradient(
+          145deg,
+          #1a1a2e 0%,
+          #16213e 50%,
+          #0f3460 100%
+        );
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card-preview::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(
+          from 0deg,
+          transparent,
+          rgba(255, 215, 0, 0.03),
+          transparent,
+          rgba(255, 105, 180, 0.03),
+          transparent
+        );
+        animation: rotate 20s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .card-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        color: #fff;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        width: 100%;
+      }
+
+      .card-decoration {
+        font-size: 60px;
+        margin-bottom: 20px;
+        animation: float 3s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+
+      .card-title {
+        font-size: 28px;
+        font-weight: bold;
+        background: linear-gradient(135deg, #ffd700, #ff6b9d, #ffd700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 15px;
+      }
+
+      .card-wish {
+        font-size: 16px;
+        line-height: 2;
+        color: #e8e8e8;
+        white-space: pre-line;
+      }
+
+      .card-placeholder {
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 14px;
+        font-style: italic;
+      }
+
+      .card-footer {
+        margin-top: 25px;
+        font-size: 14px;
+        color: rgba(255, 215, 0, 0.7);
+        position: relative;
+        z-index: 1;
+      }
+
+      .sparkle {
+        position: absolute;
+        width: 8px;
+        height: 8px;
+        background: #ffd700;
+        border-radius: 50%;
+        animation: sparkle 2s ease-in-out infinite;
+      }
+
+      .sparkle:nth-child(1) {
+        top: 15%;
+        left: 10%;
+        animation-delay: 0s;
+      }
+      .sparkle:nth-child(2) {
+        top: 20%;
+        right: 15%;
+        animation-delay: 0.5s;
+      }
+      .sparkle:nth-child(3) {
+        bottom: 25%;
+        left: 15%;
+        animation-delay: 1s;
+      }
+      .sparkle:nth-child(4) {
+        bottom: 20%;
+        right: 10%;
+        animation-delay: 1.5s;
+      }
+
+      @keyframes sparkle {
+        0%,
+        100% {
+          opacity: 0.3;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.5);
+        }
+      }
+
+      .old-card {
+        width: 100%;
+        max-width: 420px;
+        background: linear-gradient(135deg, #fff5f8, #fff0f5);
+        border: 3px solid #ffb6c1;
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 15px 50px rgba(255, 107, 157, 0.25);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .old-card::before {
+        content: "";
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(
+          circle,
+          rgba(255, 182, 193, 0.1) 0%,
+          transparent 70%
+        );
+        animation: pulse 4s ease-in-out infinite;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.5;
+        }
+        50% {
+          transform: scale(1.1);
+          opacity: 1;
+        }
+      }
+
+      .old-card-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 15px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .old-card-header .icon {
+        font-size: 32px;
+      }
+
+      .old-card-header .text {
+        font-size: 20px;
+        font-weight: bold;
+        background: linear-gradient(135deg, #ff6b9d, #c44569);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .old-card-content {
+        font-size: 15px;
+        line-height: 1.9;
+        color: #555;
+        white-space: pre-line;
+        position: relative;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 182, 193, 0.3);
+        min-height: 100px;
+      }
+
+      .old-card-placeholder {
+        color: #ccc;
+        font-style: italic;
+        text-align: center;
+        padding: 30px 0;
+      }
+
+      .card-stack-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+        margin-bottom: 10px;
+        text-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+      }
+
+      @media (max-width: 900px) {
+        .main-container {
+          flex-direction: column;
+        }
+
+        .left-panel,
+        .right-panel {
+          max-width: 100%;
+        }
+
+        .page-title {
+          font-size: 36px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-header">
+      <h1 class="page-title">
+        <span class="emoji">🎁</span>
+        <span class="emoji">🎊</span>
+        <span class="emoji">🎉</span>
+        生日祝福卡片生成器
+        <span class="emoji">🎈</span>
+        <span class="emoji">🎂</span>
+        <span class="emoji">💝</span>
+      </h1>
+      <p class="page-subtitle">
+        为你的好朋友定制
+        <span class="highlight">专属生日贺卡</span>，让祝福更有心意 ✨
+      </p>
+    </div>
+
+    <div class="main-container">
+      <div class="left-panel">
+        <div class="container">
+          <h1>🎂 趣味生日卡片生成器</h1>
+
+          <div class="form-item">
+            <label>👤 姓名</label>
+            <input type="text" id="name" placeholder="请输入对方姓名" />
+          </div>
+
+          <div class="form-item">
+            <label>🎂 年龄</label>
+            <input type="number" id="age" placeholder="请输入年龄" />
+          </div>
+
+          <div class="form-item">
+            <label>🌟 爱好</label>
+            <input
+              type="text"
+              id="hobby"
+              placeholder="比如：追剧、打球、旅行、听歌"
+            />
+          </div>
+
+          <div class="btn-box">
+            <button class="generate-btn" onclick="generateWish()">
+              生成生日祝福
+            </button>
+            <button class="copy-btn" onclick="copyText()">一键复制文案</button>
+          </div>
+
+          <div class="result-box" id="result"></div>
+          <div class="tip" id="copyTip"></div>
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <div class="card-preview" id="cardPreview">
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="sparkle"></div>
+          <div class="card-content">
+            <div class="card-decoration" id="cardDecoration">🎂</div>
+            <div class="card-title" id="cardTitle">生日快乐</div>
+            <div class="card-wish" id="cardWish">
+              <span class="card-placeholder">生成的贺卡将在此展示...</span>
+            </div>
+          </div>
+          <div class="card-footer">✨ 专属定制 · 独一无二 ✨</div>
+        </div>
+
+        <div class="card-stack-label">↓ 旧版贺卡样式</div>
+
+        <div class="old-card" id="oldCard">
+          <div class="old-card-header">
+            <span class="icon">💌</span>
+            <span class="text">生日贺卡</span>
+          </div>
+          <div class="old-card-content" id="oldCardContent">
+            <span class="old-card-placeholder"
+              >生成的贺卡内容将在此显示...</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function generateWish() {
+        const name = document.getElementById("name").value.trim();
+        const age = document.getElementById("age").value;
+        const hobby = document.getElementById("hobby").value.trim();
+        const resultDom = document.getElementById("result");
+
+        if (!name || !age || !hobby) {
+          resultDom.innerText = "请完整填写姓名、年龄、爱好哦～";
+          return;
+        }
+
+        const wish = `✨ 生日快乐 ${name} ✨
+恭喜解锁 ${age} 岁限定版本！
+愿你永远热爱${hobby}，日日开心，岁岁无忧，
+生活甜度满分，好运一路开挂，
+往后每一年都被温柔和幸运包围🥳`;
+
+        resultDom.innerText = wish;
+        document.getElementById("copyTip").innerText = "";
+
+        document.getElementById(
+          "cardTitle",
+        ).innerText = `🎉 ${name} ${age}岁生日快乐 🎉`;
+        document.getElementById("cardDecoration").innerText = "🎂";
+        document.getElementById("cardWish").innerText = wish;
+
+        document.getElementById("oldCardContent").innerHTML = wish;
+      }
+
+      function copyText() {
+        const content = document.getElementById("result").innerText;
+        if (!content || content.includes("请完整填写")) {
+          document.getElementById("copyTip").innerText = "暂无内容可复制！";
+          return;
+        }
+
+        navigator.clipboard
+          .writeText(content)
+          .then(() => {
+            document.getElementById("copyTip").innerText =
+              "✅ 复制成功，快去发朋友圈吧！";
+          })
+          .catch(() => {
+            const textarea = document.createElement("textarea");
+            textarea.value = content;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textarea);
+            document.getElementById("copyTip").innerText = "✅ 复制成功！";
+          });
+      }
+    </script>
+  </body>
+</html>
