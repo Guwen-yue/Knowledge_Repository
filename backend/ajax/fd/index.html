@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <ul class="todo-list"></ul>
+  <script >  
+    // async function main(){
+    //   const res = await fetch("http://localhost:3000/todos")
+    //   const data = await res.json()
+    //   const todoList = document.querySelector(".todo-list")
+    //   todoList.innerHTML = ""
+    //   data.forEach(item=>{
+    //     const li = document.createElement("li")
+    //     li.innerHTML = item.title
+    //     todoList.appendChild(li)
+    //   })
+    // }
+
+    // fetch前辈
+    // 输入url ，点击a标签
+    // 底层是js 可以主动的发起接口http请求，当前的也页面还在
+    // fetch xhr请求接口 动态更新页面 web2.0时代
+    const xhr =new XMLHttpRequest();//实例化一个对象
+    xhr.open("GET","http://localhost:3000/todos",true)//打开一个通信通道  （第三个参数是是否异步请求）
+    
+    console.log("start")
+
+    // 回调函数
+    xhr.onreadystatechange =async function(){
+      // console.log(xhr.responseText)
+      const todos= await JSON.parse(xhr.responseText)
+      console.log(todos)
+      document.querySelector(".todo-list").innerHTML = todos.map(todo =>`
+      <li>${todo.title}</li>
+      `).join("")
+    }
+    xhr.send()
+    console.log("end")
+    
+
+
+  </script>
+</body>
+</html>
