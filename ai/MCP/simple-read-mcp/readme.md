@@ -4,6 +4,8 @@
   返回 上下文 给llm 
 - server还要满足mcp 通信协议
 
+返回一个这样的
+
 ## 开发
 - zod
 数据验证 schema
