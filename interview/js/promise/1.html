@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+
+  <script>
+    // const streetCarsPromise = fetch('http://data.ratp.fr/api/datasets/1.0/search/?q=paris');
+    // console.log(streetCarsPromise);
+    const getStory = async ()=>{
+      return fetch('https://v1.hitokoto.cn/?c=i&encode=json')
+    }
+    const getRatp = async ()=>{
+      return fetch('https://data.ratp.fr/api/datasets/1.0/search/?q=paris')
+    }
+    async function main(){
+      // 不存在依赖关系的时侯，并行一下promise一系列静态方法
+      // const story =await getStory();
+      // const ratp =await getRatp();
+      // 这样可以实现类似并发的效果
+      // 参数是promise数组
+      // 不管谁先解决，谁后，resolve的结果会按promise数组顺序来收集。最后一个pormise resolve之后，停下来
+      // const res=await Promise.all([getStory(),getRatp()])
+      // console.log(res);
+
+      Promise.all([getStory(), getRatp()])
+    .then(response => {
+        return Promise.all(response.map(res => res.json()))
+    })
+    .catch(response => {
+        console.log(response)
+    })
+    }
+    main()
+  </script>
+
+</body>
+</html>

@@ -55,11 +55,56 @@ const messages=[
     可用工具：
     - read_file：  读取文件内容(使用此工具来获取文件内容)
     `),
-    new HumanMessage("请读取tool.mjs文件内容并解释代码")
+    new HumanMessage("请读取src/tool.mjs文件内容并解释代码")
 ];
-
+// 变量 每次调用llm 都会覆盖
+// tools 继续调用工具
+// 拿到了足够的上下文
 let response = await modelWithTools.invoke(messages);
 // console.log(JSON.stringify(response))
 messages.push(response);
+// 多个工具 await read await write 并发?
+// response.tools  ,性能，有多个任务，promise.all tool promise 数组  ， tool执行结果，每个结果带上tool id 
+// ToolMessage 给messages  把整个messages 数组 打包给llm ，得到最后的结果
 
+while(response.tool_calls && response.tool_calls.length > 0){
+  // 调用工具
+  console.log(`\n[检测到${response.tool_calls.length}]个工具调用`);
+  const toolResults = await Promise.all(
+    // map把每个toolCall 都转换为promise 实例，然后合成一个promise 数组
+        response.tool_calls.map(async (toolCall) => {
+            // 需要检验 以及准备的逻辑
+            // 找到工具
+            const tool = tools.find(t => t.name === toolCall.name);
+            // 严谨性
+            if (!tool) {
+                return `错误：找不到工具 ${toolCall.name}`
+            }
+            console.log(`[执行工具] ${toolCall.name}(
+                ${JSON.stringify(toolCall.args)})`);
+            // langchain tool 方法
+            //容错性处理 
+            try {
+                const result = await tool.invoke(toolCall.args);
+                return result;
+            } catch(err) {
+                return `错误：${err.message}`
+            }
+            
+        })
+    );
+  response.tool_calls.forEach((toolCall,index)=> {
+    messages.push(
+      new ToolMessage({
+          content:toolResults[index],
+          tool_call_id:toolCall.id,
+          name:toolCall.name,
+      })
+    )
+  })
+  response =await modelWithTools.invoke(messages);
+  console.log(response);
+  messages.push(response);
+}
  
+// 序列化一下就是一个这样的戴
