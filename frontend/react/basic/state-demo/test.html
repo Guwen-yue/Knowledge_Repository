@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <ul id="list"></ul>
+
+  <script>
+
+    const data= ["任务1","任务2","任务3"]
+    const olist = document.getElementById('list');
+    // 文档碎片<></>没有一个实体 在内存中先批量的挂载一批元素
+    const fragment=document.createDocumentFragment();
+    for(const task of data ){
+      //批量绘制 
+      const item=document.createElement('li'); // js 里面运行    
+      item.innerHTML=task;
+      fragment.appendChild(item); // 页面的渲染 css绘制  
+    }
+    // 一次性，性能好 
+
+</script>
+
+</body>
+</html>

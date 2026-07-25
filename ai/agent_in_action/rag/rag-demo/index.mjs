@@ -1,18 +1,19 @@
-import 'dotenv/config';
-import { 
-  ChatOpenAI, // llm generative
-  OpenAIEmbeddings // 嵌入模型ka
-} from '@langchain/openai';
-// txt， js  pdf  切成 段落 一定的大小来切
-// 文档 Document 
-import { Document } from '@langchain/core/documents';
+import 'dotenv/config'
+import { ChatOpenAI,
+  OpenAIEmbeddings,
+ } from '@langchain/openai'
+//  内存向量存储 rag学习 ，或轻量 
+// psql 
+import { MemoryVectorStore } from '@langchain/classic/vectorstores/memory'
+import { Document } from '@langchain/core/documents'
+// import { Embedding } from '@langchain/core/embeddings'  
 
 const model = new ChatOpenAI({
   temperature: 0,
   model: process.env.MODEL_NAME,
   apiKey: process.env.OPENAI_API_KEY,
   configuration: {
-    baseURL: process.env.OPENAI_BASE_URL
+    baseURL: process.env.OPENAI_BASE_URL,
   }
 })
 
@@ -20,10 +21,9 @@ const embeddings = new OpenAIEmbeddings({
   apiKey: process.env.OPENAI_API_KEY,
   model: process.env.EMBEDDINGS_MODEL_NAME,
   configuration: {
-    baseURL: process.env.OPENAI_BASE_URL
+    baseURL: process.env.OPENAI_BASE_URL,
   }
 })
-
 const documents = [
   new Document({
     pageContent: `光光是一个活泼开朗的小男孩，他有一双明亮的大眼睛，总是带着灿烂的笑容。光光最喜欢的事情就是和朋友们一起玩耍，他特别擅长踢足球，每次在球场上奔跑时，就像一道阳光一样充满活力。`,
@@ -91,6 +91,67 @@ const documents = [
   }),
 ];
 
-const questions = [
-  "东东和光光怎么成为朋友的?"
-]
+// 把一堆的documents 用embeddings 模型 向量化
+// 存入到内存中
+// 抽象 业务太好了 
+// 将上述documents 数组中的所有文本 
+// 通过embeddings 转换成向量，并存入内存
+// 可以拥有一个语义搜索的知识库 
+const vectorStore = await MemoryVectorStore.fromDocuments(documents,embeddings)
+
+console.log(vectorStore)
+// prompt 去语义匹配
+// 提供检索器 不用去手工的prompt embedding 
+// 将向量数据库转换为检索器
+// 是一个标准入口，输入问题， 输出最相关的文档列表
+const retriever = vectorStore.asRetriever({
+  k:3// 最相似的3条
+});
+
+const question = "东东和光光是这么这么成为朋友的"
+console.log('='.repeat(80));
+console.log(question);
+console.log('='.repeat(80));
+// 检索 相关文档
+// invoke 执行 
+// 内部逻辑， 将question 转为向量 
+// 在向量数据库中计算距离 返回K 个Document对象
+// 工作流编排
+const docs=await retriever.invoke(question);
+console.log(docs);
+// 还想要打分 本来没有必要
+// 向量的距离 越小就越相似
+const scoreResults =await vectorStore.similaritySearchWithScore(question,3);
+console.log(scoreResults);
+
+console.log("\n [检索到的文档及相似度评分]");
+docs.forEach((doc,i)=>{
+  const scoreResult=scoreResults.find(([scoredDoc])=>{
+    scoredDoc.pageContent === doc.pageContent
+  })
+  // retriever 过滤 rerank
+  // 1 - score  值越大越相似 ，consine 
+  const score =scoreResult? scoreResult[1] : null;
+  const similarity = score != null? (1-score).toFixed(4):"N/A"
+
+  console.log(`\n[文档 ${i + 1}] 相似度指标: ${similarity} (原始分: ${score})`);
+  console.log(`内容: ${doc.pageContent.substring(0, 50)}...`); // 只打印前50字避免刷屏
+  console.log(`元数据：章节=${doc.metadata.chapter}, 角色=${doc.metadata.character}, 类型=${doc.metadata.type}`);
+})
+
+// Augmented
+const context = docs
+  .map((doc, i) => `[片段${i}]\n ${doc.pageContent}`)
+  .join("\n\n-----\n\n");
+
+const prompt = `你是一个讲友情故事的老师。基于以下故事片段回答问题，用温暖生动的语言。如果故事中没有提到，就说"这个故事里还没有提到这个细节"。
+
+故事片段:
+${context}
+
+问题：${question}
+
+老师的回答:`;
+
+const response = await model.invoke(prompt);
+console.log(response.content);

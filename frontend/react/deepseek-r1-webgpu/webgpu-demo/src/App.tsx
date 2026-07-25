@@ -1,3 +1,9 @@
+
+
+
+
+
+
 // 现代前端开发框架
 // .vue->tsx 组件化 typescript + jsx 
 // 响应式
@@ -7,7 +13,7 @@ import {
   useState, //react 函数式思想 hooks, 以use 开头 
   useEffect  // 生命周期钩子函数  组件挂载时执行
 } from 'react';
-import { Progress } from '../components/Progress';
+import Progress from '../components/Progress';
 
 function App() {
   // use 用， status状态  hooks函数 
@@ -16,28 +22,37 @@ function App() {
   // 不需要dom编程）-> 数据状态（响应式，修改状态， 界面会跟着变 ）
   // 数据有不同的状态， 界面不同的状态 川剧变脸
   // null 初始值，loading 加载中 ready llm准备好了
-  const [status, setStatus] = useState(null); // 响应式数据状态
+  const [input , setInput] = useState('');
+  const [status, setStatus] = useState("ready"); // 响应式数据状态
   // 错误对象数据状态
   const [error, setError] = useState(null);
   // const [error, setError] = useState('出错了');
   // 加载信息
   // const [loadingMessage, setLoadingMessage] = useState("");
   const [loadingMessage, setLoadingMessage] = useState("开始加载");
-  const [progressItems, setProgressItems] = useState([{
-    text: 'model.onnx',
-    percentage: 0,
-    total: 34353543453
-  },{
-    text: 'model2.onnx',
-    percentage: 10,
-    total: 14353543453
-  } ]);
+
+  const [progressItems, setProgressItems] = useState([
+
+  ]);
+  // const [progressItems, setProgressItems] = useState([{
+  //   text: 'model.onnx',
+  //   total: 34353543453
+  // },{
+  //   text: 'model2.onnx',
+  //   percentage: 10,
+  //   total: 1435354345315
+  // } ]);
   // 浏览器 导航栏 是否支持 WebGPU
   // 现代浏览器的重要特性
   // ! 取反 navigator.gpu 不支持的时候 undefined 
   // !! 再取反，一定可以转成 true | false
   // 双重否定等于肯定
   const IS_WEBGPU_AVALABLE = !!navigator.gpu;
+
+  // llm 处理
+  const onEnter = () => {
+    console.log(input);
+ }
 
   // 组件生命周期， 副作用
   // 组件挂载后， 附带做什么
@@ -136,22 +151,53 @@ function App() {
         status === "loading" && (
           // tailwindcss 适配方便的 
         <div className="w-full max-w-[500px] text-left 
-        mx-auto p-4 bottom-100 mt-auto">
+        mx-auto p-4 bottom-0 mt-auto">
           <p className="text-center mb-1">{loadingMessage}</p>
-          {/* 循环输出 v-for vue react 绝对不去发明 map ？一个数组返回一个新数组
-          原来json数组 => 渲染的进度条jsx*/}
+          
+          
           {
-            // 循环输出,react 用了原生js  
-            progressItems.map(({text,percentage,total},index) => (
-              // 组件函数可以以自定义标签的方式,类html插入 
-              // 开关标签的xml语法
-              // 自闭和标签  
-              // App的子组件 
-              <Progress text={text} percentage={percentage} total={total} index={index} />
+            // 循环输出， react 用了原生js 
+            progressItems.map(({ text, percentage, total}, i) => (
+              // 组件函数可以以自定义标签的方式，类html插入 
+              // 开关标签的 xml
+              // 自闭和标签
+              // App 的子组件
+              <Progress 
+                key={i}
+                text={text} 
+                percentage={percentage}
+                total={total}
+              />
             ))
           }
         </div>
       )}
+      {/* 输入聊天框 */}
+      <div className="mt-2 border border-gray-300 rounded-lg w-[600px] max-w-[80%] max-h-[200px] mx-auto relative
+      mb-3 flex">
+        <textarea className="w-[550px] dark-gray-700 px-3 py-4 rounded-lg bg-transparent 
+        border-none outline-hidden disabled:text-gray-400 
+        disabled:placeholder:text-gray-200" placeholder="Type your message...." rows={1} 
+        disabled={status !== "ready"}
+        // react 不支持双向绑定 ，性能不太好
+        onInput={(e)=>{ 
+          // e.target.value  事件对象上target 属性一定有
+          // 不一定有有value对象
+          // e 通用的事件对象 e.target 通过的事件目标对象 不一定有value属性
+
+          // 断言   告诉ts他一定是textarea 元素有value属性的  as 是 ts的关键字
+          const target = e.target as HTMLTextAreaElement;
+          setInput(target.value);
+        }}
+        onKeyDown={(e)=>{
+          if(input.length >0 && e.key === 'Enter' &&  !e.shiftKey){
+            e.preventDefault();
+            onEnter();
+          }
+        }}
+        value={ input }
+        title={status ==='ready'?'Model is ready ': "Model not loaded yet"}></textarea>
+      </div>
     </div>):(
       <div>您的浏览器还不支持WebGPU</div>
     )

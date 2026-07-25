@@ -1,0 +1,33 @@
+# RAG 
+Retrieval Augmented Generation
+Retrieval 检索器
+知识库 ->先 embedding 基于向量数据库   -> 检索器 （embedding+ 行速度 +prompt embedding） 
+
+## langchain RAG 业务能力
+开箱即用的llm开发框架
+- @langchain/openai Chatopenai  Embedding
+- @langchain/core/documents 
+  embedding 的最小单元
+  知识库 由文件（文本，声音，图片，视频等）构成
+  某个段落的文字 有我们要找的语义
+  {
+    pageContent：”要单独embedding段落文本“，
+    meta：{//元数据  不做embedding
+      .....
+      link：”xxx.com“,
+      author:.....
+    }
+  }
+  documents .... 简单就放内存 复杂 ，发送向量数据库
+- @langchain/classic llm 开发以来  langchain 的经典常用模块
+MemortVectorStore 内存向量存储  
+
+检索器=（知识库 -> 文档 -> documents -> embedding -> memoryVectorStore）
+invoke()
+
+AI发展太迅猛 langchain 版本更新太快，看文档
+
+- retriever.invoke(3) top_k
+  在相似度查询的基础上，还会做去重，过滤，rerank 等
+- vectorStore.similaritySearchWithScore(3)  只做向量查询 
+  score 会表达内容的质量 ，增加高质量的数据 继续向量化  
