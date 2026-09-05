@@ -33,3 +33,6 @@ Thumbs.db
 
 # --- Logs ---
 *.log
+
+# --- Docker / Milvus 运行时数据 ---
+**/milvus-docker/volumes/

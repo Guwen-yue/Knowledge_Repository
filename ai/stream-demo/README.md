@@ -21,3 +21,20 @@ Unit8Array[十进制数，....]
 安排解码
 
 ## server 流式输出
+### 后端返回的数据流
+- 二进制文本
+- \n 换行符 每个数据(data:)块 一行结束
+  兼顾响应速度和传输的效率
+  llm 生成token 时 json 短一点
+  llm 再生成一些token, json 格式化 
+  一次性发送多少个data: 不确定的， 1行，也可能是2-3行 
+- data: {} json格式文本 completion 差不多的结构 
+  出错 数据包一定的大小
+  当json 数据超过大小， 截断  cache_20260402","choices":[{"index":0,
+  \n split for  data: json JSON.parse() 有可能失败
+  try{
+
+  } catch(e) {
+    // 出错  不能扔掉，
+    下一段接着要  接着发送后面的部分。
+  }

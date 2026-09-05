@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    .layout{
+      display: flex; 
+    }
+    #left{
+      width: 200px;
+      background-color: green
+    }
+    .content{
+      flex: 1;
+      background-color: red;
+    }
+    #right{
+      width: 200px;
+      background-color: black
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside id="left"></aside>
+    <main class="content">Main Content </main>
+    <aside id="right"></aside>
+  </div>
+</body>
+</html>

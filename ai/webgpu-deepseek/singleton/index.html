@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>单例模式打开窗口</title>
+</head>
+<body>
+  <button id="openBtn">打开新网页</button>
+  <script>
+    class Popup {
+      static ins;
+      static getInstance() {
+        if (!this.ins) {
+          this.ins = new Popup();
+        }
+        return this.ins;
+      }
+    }
+
+    const openBtn = document.getElementById("openBtn");
+    openBtn.addEventListener("click", () => {
+      window.open("https://www.baidu.com", "_blank");
+    });
+  </script>
+</body>
+</html>
