@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <h1>WebSocket Client</h1>
+
+  <script>
+    // http协议 -> ws协议
+    const ws = new WebSocket('ws://localhost:8000/ws');
+    ws.onopen = () => {
+      console.log('Connected to server');
+      ws.send('Hello, server!');
+    }
+    ws.onmessage = (event) => {
+      console.log('Received message:', event.data);
+    }
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+    }
+    ws.onclose = () => {
+      console.log('Connection closed');
+    }
+
+  </script>
+</body>
+</html>

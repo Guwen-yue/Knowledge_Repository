@@ -1,0 +1,18 @@
+{
+  "name": "langgraph",
+  "version": "1.0.0",
+  "description": "复杂的agent 产品基本都是多agent架构。\r - langchain 工作流编排 线性的\r - langgraph 工作流编排 网状的\r - 上下文的开销\r   单agent 架构下 ，所有tool的描述，每个功能的prompt 都放在system prompt 里\r   实际上执行每个功能只需要其中的一部分prompt，但每次都要带上。\r   token消耗更高，更重要的是很多无关信息干扰，思考效率低且容易出错。\r - 分工\r - 如何拆分多个Agent？\r   每个只保留需要的prompt，执行的时候，消耗的token 更少，没有无关的信息干扰，准确率更高。\r Agent = LLM（大脑） + harness （tool + mcp + rag + skill + ...）\r 单agent只有一个llm大脑，需要一步步思考 调用tool\r 规划\r 多agent 多个大脑 ，并行思考\r 主agent 下发任务，子agent秉性处理完成后返回\r 每个大脑需要适合的模型",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@langchain/core": "^1.2.9",
+    "@langchain/langgraph": "^1.4.14",
+    "@langchain/openai": "^1.5.11",
+    "zod": "^4.5.4"
+  }
+}

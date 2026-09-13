@@ -32,6 +32,7 @@ Conetent-Type: text/plain
 Conetent-Type: text/html
 ```
 ## EventSource 类
+这是新的web api 用来建立一个持久的单向的数据推送
 用于连接SSE , 给他url 
 sse 不只有llm 返回， 股票...
 stream fs流 pip一下 
@@ -59,6 +60,8 @@ langchain 用来解析json 结果的。
 parser.getFormatInstructions() 空， json太常见的格式需求
 parser.parse 
 
+
+
 本质 就是 通过 getFormatInstructions() 在prompt 里添加对output 的结构化格式约定， 
 parser.parse() 取出markdown 拿到json 
 
@@ -67,3 +70,14 @@ parser.parse() 取出markdown 拿到json
 - fromZodSchema
 
 下流业务用上靠谱的JSON 输出
+
+为了语义化，langchain 封装了 model 
+withStructureOutput(schema),
+高阶api，他的内部实现tool call
+有的大模型不支持tool call 降级为使用Prompt + JSON 描述来做
+
+
+
+output-parser 模块是不是可以丢了：
+不可以，格式化输出 不知有json格式 xml yaml等
+推荐用的是model.withStructureOutput 格式特殊 用output-parser 解析

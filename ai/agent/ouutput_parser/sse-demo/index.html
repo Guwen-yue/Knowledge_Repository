@@ -11,7 +11,7 @@
   <script>
   const resultEle = document.getElementById('result');
   // 怎么发起连接stream sse？
-  const eventSource = new EventSource("http://localhost:3000/stream");
+  const eventSource = new EventSource("http://localhost:3000/stream"); 
   // chunk 到达的时候
   eventSource.onmessage = (e) => {
     console.log(e.data);
