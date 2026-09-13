@@ -34,5 +34,40 @@ Thumbs.db
 # --- Logs ---
 *.log
 
+# --- AI Agent / AI 编程工具生成 ---
+.trae/
+.cursor/
+.cursorrules
+.cursorignore
+.windsurf/
+.claude/
+.claude.json
+.codeium/
+.continue/
+.aider*
+.gemini/
+CLAUDE.md
+AGENTS.md
+*.code-workspace
+git-error-*
+
+# --- Editor & OS 补充 ---
+.vscode/settings.json
+
+# --- 构建 / 测试 / 缓存 补充 ---
+coverage/
+.nyc_output/
+.vite/
+.turbo/
+.parcel-cache/
+*.tsbuildinfo
+.eslintcache
+.pnpm-store/
+
+# --- 临时文件 ---
+*.tmp
+*.bak
+~$*
+
 # --- Docker / Milvus 运行时数据 ---
 **/milvus-docker/volumes/
