@@ -69,5 +69,6 @@ coverage/
 *.bak
 ~$*
 
-# --- Docker / Milvus 运行时数据 ---
+# --- Docker / 数据库运行时数据 ---
 **/milvus-docker/volumes/
+**/volumes/

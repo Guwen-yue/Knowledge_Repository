@@ -23,7 +23,7 @@ const GraphState = Annotation.Root({
   webContext: Annotation, // 网络搜索上下文 
   evaluation: Annotation, // { enough, missing, reason}
   generation: Annotation
-})        
+})
 
 const llm = new ChatOpenAI({
   model: process.env.MODEL_NAME,
@@ -177,6 +177,7 @@ const generateNode = async (state) => {
     .filter(Boolean)// Boolean 函数
     .join("\n\n==联网补充==\n\n");
   process.stdout.write("\n[AI 回答(流式)]\n");
+  let generation = "";
   const stream = await llm.stream(`你是一个严谨的中文问答助手。
     优先依据上下文回答，不要编造。
     上下文（本地知识库 + 可选联网补充）:
@@ -192,9 +193,110 @@ const generateNode = async (state) => {
 
     回答：
   `);
-  // for await () {
+  for await (const chunk of stream) {
+    const text = typeof chunk.content === "string"? chunk.content: "";
+    if (!text) continue;
+    generation += text;
+    process.stdout.write(text);
+  }
+  process.stdout.write("\n");
+  return {
+    generation
+  }
+}
 
-  // }
+const afterEvaluateLocal = (state) => {
+  if (state.webContext && String(state.webContext).trim()) {
+    return "generate"
+  }
+  const parsed = (() => {
+    try {
+      return JSON.parse(state.evaluation || "{}")
+    } catch {
+      return {};
+    }
+  })();
+  return parsed.enough === true ? "generate": "web_search";
+}
+
+async function bochaWebSearch(query, count) {
+  const apiKey = process.env.BOCHA_API_KEY;
+  if (!apiKey) {
+    throw new Error("Bocha Web Search 的API KEY 未配置（环境变量BOCHA_API_KEY）。")
+  }
+  const url = "https://api.bochaai.com/v1/web-search";
+  const body = {
+    query,
+    freshness: "noLimit",
+    summary: true, // 返回的内容， 做个总结
+    count: count ?? 10
+  }
+
+  let response;
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(body)
+    });
+  } catch {
+    throw new Error(`搜索API 请求失败(网络错误): ${error.message}`)
+  }
+  // 先处理失败 
+  // ok 200 语义化更好
+  if (!response.ok) {
+    // 二进制流 json() text()
+    // 出错，打印出错信息 
+    const errorText = await response.text().catch(() => "");
+    throw new Error(`搜索API 请求失败，状态码:${response.status}, 
+      错误信息：${errorText}`);
+  }
+
+  let json;
+  try {
+    json = await response.json(); 
+  } catch(err) {
+    throw new Error(`搜索结果解析失败：${err.message}`)
+  }
+  console.log(json, "///////////");
+  const webpages = json.data.webPages?.value ?? [];
+  if (webpages.length) {
+    return "未找到相关结果。"
+  }
+
+  return webpages
+    .map((page, idx) => `引用: ${idx + 1}
+      标题：${page.name}
+      URL: ${page.url}
+      摘要：${page.summary}
+      网站名称：${page.siteName}
+      网站图标：${page.siteIcon}
+      发布时间：${page.dateLastCrawled}
+    `)
+    .join("\n\n")
+}
+
+const webSearchNode = async (state) => {
+  console.log("---WEB_SEARCH---");
+  const parsed = (() => {
+    try {
+      return JSON.parse(state.evaluation || "{}")
+    } catch {
+      return {};
+    }
+  })();
+  const query = (parsed.web_query ?? "").trim() || state.question;
+  console.log(`联网查询：${query}`);
+  // 封装
+  // 方便切换其他服务
+  const webContext = await bochaWebSearch(query, 8);
+  console.log(`联网结果长度：${webContext.length}`);
+  return {
+    webContext
+  }
 }
 
 const graph = new StateGraph(GraphState)
@@ -203,18 +305,75 @@ const graph = new StateGraph(GraphState)
   .addNode("local_retrieve", retrieveLocalNode)
   .addNode("evaluate_local", evaluateNode)
   .addNode("generate", generateNode)
+  .addNode("web_search", webSearchNode)
   .addEdge(START, "route_question")
   .addConditionalEdges("route_question", afterRoute, {
     direct_answer: "direct_answer",
     local_retrieve: "local_retrieve"
   })
   .addEdge("local_retrieve", "evaluate_local")
+  .addConditionalEdges("evaluate_local", afterEvaluateLocal,  {
+    generate: "generate",
+    web_search: "web_search"
+  })
+  .addEdge("web_search", "evaluate_local")
   .addEdge("direct_answer", END)
-  .addEdge("evaluate_local", END)
+  .addEdge("generate", END)
   .compile();
 
 const drawable = await graph.getGraphAsync();
 const mermaid = drawable.drawMermaid({ withStyles: true });
 console.log(mermaid);
 
+async function main() {
+  const question = `请回答《天龙八部》小说里"雁门关事件"的主谋是谁， 并说明其儿子的最终结局；
+  另外请补充： 在《天龙八部》2013版电视剧中，这段“雁门关事件”主要出现在哪几集？
+  请给出可核对的来源链接。
+  `
+  const k = 8;
 
+  console.log(`链接到Milvus。。。`);
+  vectorStore = await Milvus.fromExistingCollection(embeddings, {
+    collectionName: "ebook_collection",
+    url: "localhost:19530",
+    textField: "content",
+    primaryField: "id",
+    vectorField: "vector",
+    indexCreateOptions: {
+      metric_type: "COSINE",
+      // 多层近邻网络图
+      index_type: "HNSW",
+      params: { M: 16, efConstruction: 200 },
+      search_params: { ef: 64 }
+    }
+  });
+  vectorStore.indexSearchParams = {
+    metric_type: "COSINE",
+    params: JSON.stringify({ef: 64})
+  }
+  
+  console.log(`已连接`);
+  try {
+    await vectorStore.client.loadCollection({ collection_name: "ebook_collection" });
+    console.log(`集合已经加载`);
+  } catch(err) {
+    console.log(`集合已处于加载状态`);
+  }
+
+  const result = await graph.invoke({
+    question,
+    k,
+    strategy: "",
+    routeReson: "",
+    retrieveDocs: [],
+    localContext: "",
+    webContext: "",
+    evaluation: "",
+    generation: ""
+  });
+  if (result.generation?.trim()) {
+    console.log(result.generation);
+  }
+}
+
+main()

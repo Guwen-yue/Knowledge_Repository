@@ -24,3 +24,4 @@ docker compose up -d
 - docker compose 寻找根目录下的docker-compose.yml
 - up 运行起来
 - -d 后台运行
+
